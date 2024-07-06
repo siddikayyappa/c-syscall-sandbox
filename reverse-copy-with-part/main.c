@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 #define PROGRESS_BAR_WIDTH 50
 #define MAX_BUFFER_SIZE 16384
+#pragma GCC poison printf
 
 void reverse(char* buffer, int size){
     for(int i = 0; i < size / 2; i++){
@@ -15,8 +17,11 @@ void reverse(char* buffer, int size){
 }
 
 int main(int argc, char* argv[]){
+    char print_buf[100];
+    memset(print_buf, 0, sizeof(print_buf));
     if(argc != 4){
-        printf("Usage: <input_file> <no_of_parts>  <part_to_be_reversed>\n");
+        sprintf(print_buf, "Usage: <input_file> <no_of_parts>  <part_to_be_reversed>\n");
+        write(1, print_buf, strlen(print_buf));
         return 1;
     }
     char* input_file = argv[1];
@@ -63,7 +68,9 @@ int main(int argc, char* argv[]){
         write(output_fd, buffer, bytes_read);
         progress += bytes_read;
         progress_bar[(int)((float)progress / part_size * PROGRESS_BAR_WIDTH)] = '#';
-        printf("\e[?25l Progress:[%s] %.3f %%\r", progress_bar, (float)progress / part_size * 100);
+        memset(print_buf, 0, sizeof(print_buf));
+        sprintf(print_buf, "\e[?25l Progress:[%s] %.3f %%\r", progress_bar, (float)progress / part_size * 100);
+        write(1, print_buf, strlen(print_buf));
         if(part_size - progress < MAX_BUFFER_SIZE){
             bytes_read = part_size - progress;
             lseek(input_fd, start, SEEK_SET);
@@ -71,9 +78,15 @@ int main(int argc, char* argv[]){
         }
         lseek(input_fd, -2 * bytes_read, SEEK_CUR);
     }
-    printf("\nPart size of %s: %lld\n", argv[1],part_size);
-    printf("Bytes read: %lld\n", progress);
-    printf("\n");
+    memset(print_buf, 0, sizeof(print_buf));
+    sprintf(print_buf, "\nPart size of %s: %lld\n", argv[1],part_size);
+    write(1, print_buf, strlen(print_buf));
+    memset(print_buf, 0, sizeof(print_buf));
+    sprintf(print_buf, "Bytes read: %lld\n", progress);
+    write(1, print_buf, strlen(print_buf));
+    memset(print_buf, 0, sizeof(print_buf));
+    sprintf(print_buf, "\n");
+    write(1, print_buf, strlen(print_buf));
     
     close(input_fd);
     close(output_fd);

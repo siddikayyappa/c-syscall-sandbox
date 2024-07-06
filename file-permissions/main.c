@@ -5,7 +5,7 @@
 #include<unistd.h>
 #include<string.h>
 
-
+#pragma GCC poison printf
 int main(int argc, char *argv[]){
     struct stat buf;
     int temp;

@@ -5,9 +5,11 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include<string.h>
 
 #define BUFFER_SIZE 70000
 #define PROGRESS_BAR_WIDTH 50
+#pragma GCC poison printf
 
 void reverse(char* buffer, int size) {
     char temp;
@@ -19,8 +21,11 @@ void reverse(char* buffer, int size) {
 }
 
 int main(int argc, char *argv[]) {
+    char print_buf[100];
+    memset(print_buf, 0, sizeof(print_buf));
     if(argc != 3){
-        printf("%d Usage: <input_file> <output file>\n", argc);
+        sprintf(print_buf, "%d Usage: <input_file> <output file>\n", argc);
+        write(1, print_buf, strlen(print_buf));
         return 1;
     }
     // Open input file
@@ -71,7 +76,9 @@ int main(int argc, char *argv[]) {
         write(output_fd, buf, bytes_read);
         progress += bytes_read;
         progress_bar[(int)((float)progress / file_size * PROGRESS_BAR_WIDTH)] = '#';
-        printf("\e[?25l Progress:[%s] %.3f %%\r", progress_bar, (float)progress / file_size * 100);
+        memset(print_buf, 0, sizeof(print_buf));
+        sprintf(print_buf, "\e[?25l Progress:[%s] %.3f %%\r", progress_bar, (float)progress / file_size * 100);
+        write(1, print_buf, strlen(print_buf));
         if (file_size - progress < BUFFER_SIZE) {
             bytes_read = file_size - progress;
             lseek(input_fd, 0, SEEK_SET);
@@ -79,9 +86,15 @@ int main(int argc, char *argv[]) {
         }
         lseek(input_fd, -2*bytes_read, SEEK_CUR);
     }
-    printf("\nFile size of %s: %lld\n", argv[1], file_size);
-    printf("Bytes read: %lld\n", progress);
-    printf("\n");
+    memset(print_buf, 0, sizeof(print_buf));
+    sprintf(print_buf, "\nFile size of %s: %lld\n", argv[1], file_size);
+    write(1, print_buf, strlen(print_buf));
+    memset(print_buf, 0, sizeof(print_buf));
+    sprintf(print_buf, "Bytes read: %lld\n", progress);
+    write(1, print_buf, strlen(print_buf));
+    memset(print_buf, 0, sizeof(print_buf));
+    sprintf(print_buf, "\n");
+    write(1, print_buf, strlen(print_buf));
     
     close(input_fd);
     close(output_fd);
